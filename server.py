@@ -1,4 +1,5 @@
 # server.py
+import os
 import http.server
 import socketserver
 import urllib.parse
@@ -6,7 +7,8 @@ import urllib.request
 import webbrowser
 from pathlib import Path
 
-PORT = 8000
+PORT = int(os.environ.get("PORT", 8000))
+server_address = ("0.0.0.0", PORT)
 
 BASE_DIR = Path(__file__).resolve().parent
 TARGET_DIR = BASE_DIR / "popa" if (BASE_DIR / "popa").exists() else BASE_DIR
