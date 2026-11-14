@@ -414,7 +414,7 @@ def run_server():
     entry_route = find_entry_point(TARGET_DIR)
     url = f"http://localhost:{PORT}{entry_route}"
 
-    with socketserver.TCPServer(("127.0.0.1", PORT), CustomStaticHandler) as httpd:
+    with socketserver.TCPServer(("0.0.0.0", PORT), CustomStaticHandler) as httpd:
         print(f"[*] Сервер запущен: {url}")
         webbrowser.open(url)
         try:
