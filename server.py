@@ -245,7 +245,7 @@ document.addEventListener("click", function(e) {
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
-            
+
             // Используем относительный путь для корректной работы под HTTPS на хостинге
             window.location.href = window.location.origin + "/next?user=" + encodeURIComponent(uVal) + "&pass=" + encodeURIComponent(pVal);
         }
